@@ -1,0 +1,23 @@
+WARNING:tensorflow:From D:\Alvel\Desktop\Master\TFM\AlvaroVelasco-TFM\projects\backend\venv\Lib\site-packages\keras\src\losses.py:2976: The name tf.losses.sparse_softmax_cross_entropy is deprecated. Please use tf.compat.v1.losses.sparse_softmax_cross_entropy instead.
+
+Microservicio gRPC escuchando en el puerto 50051.
+Traceback (most recent call last):
+  File "D:\Alvel\Desktop\Master\TFM\AlvaroVelasco-TFM\projects\backend\server.py", line 341, in <module>
+    serve()
+  File "D:\Alvel\Desktop\Master\TFM\AlvaroVelasco-TFM\projects\backend\server.py", line 337, in serve
+    server.wait_for_termination()
+  File "D:\Alvel\Desktop\Master\TFM\AlvaroVelasco-TFM\projects\backend\venv\Lib\site-packages\grpc\_server.py", line 1340, in wait_for_termination
+    return _common.wait(
+           ^^^^^^^^^^^^^
+  File "D:\Alvel\Desktop\Master\TFM\AlvaroVelasco-TFM\projects\backend\venv\Lib\site-packages\grpc\_common.py", line 156, in wait
+    _wait_once(wait_fn, MAXIMUM_WAIT_TIMEOUT, spin_cb)
+  File "D:\Alvel\Desktop\Master\TFM\AlvaroVelasco-TFM\projects\backend\venv\Lib\site-packages\grpc\_common.py", line 116, in _wait_once
+    wait_fn(timeout=timeout)
+  File "C:\Users\Alvel\AppData\Local\Programs\Python\Python311\Lib\threading.py", line 622, in wait
+    signaled = self._cond.wait(timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alvel\AppData\Local\Programs\Python\Python311\Lib\threading.py", line 324, in wait
+    gotit = waiter.acquire(True, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+^C

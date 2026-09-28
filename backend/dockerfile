@@ -1,0 +1,26 @@
+FROM python:3.11-slim-bookworm
+
+WORKDIR /app
+
+# Instalar dependencias del sistema necesarias para compilar ciertos paquetes
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    llvm-14 \
+    llvm-14-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV DRJIT_LIBLLVM_PATH=/usr/lib/llvm-14/lib/libLLVM.so
+
+# Copiar requirements e instalar dependencias
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el código fuente
+COPY . .
+
+# Exponer el puerto gRPC
+EXPOSE 50051
+
+ENV PYTHONUNBUFFERED=1
+# Comando para iniciar el backend
+CMD ["python", "server.py"]

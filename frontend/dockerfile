@@ -1,0 +1,27 @@
+# Etapa 1: Build
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copiar package.json y package-lock.json
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm ci
+
+# Copiar el resto del código y hacer el build
+COPY . .
+RUN npm run build
+
+# Etapa 2: Servidor
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copiamos todo desde la etapa de build
+COPY --from=build /app /app
+
+EXPOSE 8081
+
+# Iniciar el servidor web de python
+CMD ["python", "-m", "http.server", "8081"]

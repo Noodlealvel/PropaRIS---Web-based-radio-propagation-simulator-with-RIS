@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>PropaRIS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-title">PropaRIS</div>
+
+        <div class="navbar-buttons">
+            <button class="btn btn-secondary" id="btn-load-scene" data-bs-toggle="modal"
+                data-bs-target="#modal-load-scene">Load scene</button>
+            <button class="btn btn-primary" id="btn-add-ris" data-bs-toggle="modal" data-bs-target="#modal-add-ris">
+                Add RIS
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-radio">Add Radio
+                Device</button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-config-arrays">Configure
+                Planar Arrays</button>
+            <button type="button" id="btn-ray-tracing" class="btn btn-success" data-bs-toggle="modal"
+                data-bs-target="#modal-ray-tracing">
+                Run Ray Tracing
+            </button>
+            <button type="button" id="btn-coverage-map" class="btn btn-success" data-bs-toggle="modal"
+                data-bs-target="#modal-coverage-map">
+                See coverage map
+            </button>
+            <button class="btn btn-secondary" id="btn-export">Export session</button>
+            <button class="btn btn-secondary" id="btn-import" data-bs-toggle="modal"
+                data-bs-target="#modal-import-session">Import session</button>
+        </div>
+    </nav>
+
+    <div id="contenedor-3d"></div>
+
+    <div id="ris-hover-menu" class="btn-group position-absolute d-none" style="z-index: 1000;">
+        <button class="btn btn-sm btn-warning" id="btn-hover-edit">Edit</button>
+        <button class="btn btn-sm btn-danger" id="btn-hover-delete">Delete</button>
+    </div>
+
+    <div class="modal fade" id="modal-import-session" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form id="form-import-session" class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Import session</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="import-file-input" class="form-label fw-bold">Select session file (.json)</label>
+                        <input type="file" class="form-control" id="import-file-input" accept=".json" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Import session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-add-ris" tabindex="-1" aria-labelledby="modalRisLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="modalRisLabel">Add new RIS</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-add-ris">
+                        <div class="mb-3">
+                            <label for="ris-name" class="form-label fw-bold">Name</label>
+                            <input type="text" class="form-control" id="ris-name" value="ris_1" required>
+                        </div>
+
+                        <h6 class="fw-bold border-bottom pb-1">Size mode</h6>
+                        <div class="form-group mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="risSizeMode" id="sizeModeWidth"
+                                    value="width" checked>
+                                <label class="form-check-label" for="sizeModeWidth">Calculate from width</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="risSizeMode" id="sizeModeRowsCols"
+                                    value="rowscols">
+                                <label class="form-check-label" for="sizeModeRowsCols">Manual rows & columns</label>
+                            </div>
+                        </div>
+
+                        <div id="ris-size-width-inputs" class="row mb-3">
+                            <div class="col">
+                                <label for="ris-width" class="form-label fw-bold">Width</label>
+                                <input type="number" class="form-control" id="ris-width" value="2" min="1">
+                            </div>
+                        </div>
+
+                        <div id="ris-size-rowscols-inputs" class="row mb-3 d-none">
+                            <div class="col">
+                                <label for="ris-rows" class="form-label fw-bold">Rows</label>
+                                <input type="number" class="form-control" id="ris-rows" value="40" min="1">
+                            </div>
+                            <div class="col">
+                                <label for="ris-cols" class="form-label fw-bold">Columns</label>
+                                <input type="number" class="form-control" id="ris-cols" value="40" min="1">
+                            </div>
+                        </div>
+
+                        <label class="form-label fw-bold mb-1">Position (in m)</label>
+                        <div class="row mb-3">
+                            <div class="col"><input type="number" step="0.1" class="form-control" id="ris-pos-x"
+                                    value="0.0" required placeholder="X"></div>
+                            <div class="col"><input type="number" step="0.1" class="form-control" id="ris-pos-y"
+                                    value="0.0" required placeholder="Y"></div>
+                            <div class="col"><input type="number" step="0.1" class="form-control" id="ris-pos-z"
+                                    value="0.0" required placeholder="Z"></div>
+                        </div>
+
+                        <h6 class="mt-4 fw-bold border-bottom pb-1">Orientation mode</h6>
+                        <div class="form-group mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="risLookAtMode" id="modeOrientation"
+                                    value="orientation" checked>
+                                <label class="form-check-label" for="modeOrientation">Manual (º)</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="risLookAtMode" id="modePosition"
+                                    value="position">
+                                <label class="form-check-label" for="modePosition">Look at position</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="risLookAtMode" id="modeObject"
+                                    value="object">
+                                <label class="form-check-label" for="modeObject">Look at object</label>
+                            </div>
+                        </div>
+
+                        <div id="ris-orientation-inputs">
+                            <label class="form-label fw-bold mb-1">Orientation (in º)</label>
+                            <div class="row mb-3">
+                                <div class="col"><input type="number" step="1" class="form-control" id="ris-ori-x"
+                                        value="0" placeholder="X"></div>
+                                <div class="col"><input type="number" step="1" class="form-control" id="ris-ori-y"
+                                        value="0" placeholder="Y"></div>
+                                <div class="col"><input type="number" step="1" class="form-control" id="ris-ori-z"
+                                        value="0" placeholder="Z"></div>
+                            </div>
+                        </div>
+
+                        <div id="ris-lookat-pos-inputs" class="d-none">
+                            <label class="form-label fw-bold mb-1">Look at position (in m)</label>
+                            <div class="row mb-3">
+                                <div class="col"><input type="number" step="0.1" class="form-control"
+                                        id="ris-lookat-pos-x" value="0.0" placeholder="X"></div>
+                                <div class="col"><input type="number" step="0.1" class="form-control"
+                                        id="ris-lookat-pos-y" value="0.0" placeholder="Y"></div>
+                                <div class="col"><input type="number" step="0.1" class="form-control"
+                                        id="ris-lookat-pos-z" value="0.0" placeholder="Z"></div>
+                            </div>
+                        </div>
+
+                        <div id="ris-lookat-obj-inputs" class="d-none">
+                            <label class="form-label fw-bold mb-1">Look at object</label>
+                            <div class="mb-3">
+                                <select class="form-select" id="ris-lookat-obj-select">
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h6 class="mt-4 fw-bold border-bottom pb-1">Profile configuration</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Setting</label>
+                            <select class="form-select" id="ris-mode">
+                                <option value="NONE">None</option>
+                                <option value="PHASE_GRADIENT">Phase Gradient Reflector</option>
+                                <option value="FOCUSING_LENS">Focusing Lens</option>
+                            </select>
+                        </div>
+                        <div id="ris-profile-config" class="mb-3 d-none">
+                            <div class="mb-3">
+                                <label for="ris-num-modes" class="form-label fw-bold">Number of reradiation
+                                    modes</label>
+                                <input type="number" class="form-control" id="ris-num-modes" value="1" min="1" max="8">
+                            </div>
+                            <div id="ris-modes-container" class="border rounded p-2 bg-light">
+                            </div>
+                        </div>
+
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" data-bs-shadow
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-edit-ris" tabindex="-1" aria-labelledby="modalEditRisLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="modalEditRisLabel">Edit RIS parameters</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-edit-ris">
+                        <input type="hidden" id="edit-ris-oldname">
+                        <div class="mb-3">
+                            <label for="edit-ris-name" class="form-label fw-bold">Name</label>
+                            <input type="text" class="form-control" id="edit-ris-name" required>
+                        </div>
+                        <h6 class="fw-bold border-bottom pb-1">Size mode</h6>
+                        <div class="form-group mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="editRisSizeMode"
+                                    id="editSizeModeWidth" value="width" checked>
+                                <label class="form-check-label" for="editSizeModeWidth">Calculate from Width</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="editRisSizeMode"
+                                    id="editSizeModeRowsCols" value="rowscols">
+                                <label class="form-check-label" for="editSizeModeRowsCols">Manual Rows & Columns</label>
+                            </div>
+                        </div>
+
+                        <div id="edit-ris-size-width-inputs" class="row mb-3">
+                            <div class="col">
+                                <label for="edit-ris-width" class="form-label fw-bold">Width</label>
+                                <input type="number" class="form-control" id="edit-ris-width" value="2" min="1">
+                            </div>
+                        </div>
+
+                        <div id="edit-ris-size-rowscols-inputs" class="row mb-3 d-none">
+                            <div class="col">
+                                <label for="edit-ris-rows" class="form-label fw-bold">Rows</label>
+                                <input type="number" class="form-control" id="edit-ris-rows" value="40" min="1">
+                            </div>
+                            <div class="col">
+                                <label for="edit-ris-cols" class="form-label fw-bold">Columns</label>
+                                <input type="number" class="form-control" id="edit-ris-cols" value="40" min="1">
+                            </div>
+                        </div>
+                        <label class="form-label fw-bold mb-1">Position (in m)</label>
+                        <div class="row mb-3">
+                            <div class="col"><input type="number" step="0.1" class="form-control" id="edit-ris-pos-x"
+                                    required></div>
+                            <div class="col"><input type="number" step="0.1" class="form-control" id="edit-ris-pos-y"
+                                    required></div>
+                            <div class="col"><input type="number" step="0.1" class="form-control" id="edit-ris-pos-z"
+                                    required></div>
+                        </div>
+
+                        <h6 class="mt-4 fw-bold border-bottom pb-1">Orientation mode</h6>
+                        <div class="form-group mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="editRisLookAtMode"
+                                    id="editModeOrientation" value="orientation">
+                                <label class="form-check-label" for="editModeOrientation">Manual (º)</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="editRisLookAtMode"
+                                    id="editModePosition" value="position">
+                                <label class="form-check-label" for="editModePosition">Look at position</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="editRisLookAtMode"
+                                    id="editModeObject" value="object">
+                                <label class="form-check-label" for="editModeObject">Look at object</label>
+                            </div>
+                        </div>
+
+                        <div id="edit-ris-orientation-inputs">
+                            <label class="form-label fw-bold mb-1">Orientation (in º)</label>
+                            <div class="row mb-3">
+                                <div class="col"><input type="number" step="1" class="form-control" id="edit-ris-ori-x">
+                                </div>
+                                <div class="col"><input type="number" step="1" class="form-control" id="edit-ris-ori-y">
+                                </div>
+                                <div class="col"><input type="number" step="1" class="form-control" id="edit-ris-ori-z">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="edit-ris-lookat-pos-inputs" class="d-none">
+                            <label class="form-label fw-bold mb-1">Look at position (in m)</label>
+                            <div class="row mb-3">
+                                <div class="col"><input type="number" step="0.1" class="form-control"
+                                        id="edit-ris-lookat-pos-x" placeholder="X"></div>
+                                <div class="col"><input type="number" step="0.1" class="form-control"
+                                        id="edit-ris-lookat-pos-y" placeholder="Y"></div>
+                                <div class="col"><input type="number" step="0.1" class="form-control"
+                                        id="edit-ris-lookat-pos-z" placeholder="Z"></div>
+                            </div>
+                        </div>
+
+                        <div id="edit-ris-lookat-obj-inputs" class="d-none">
+                            <label class="form-label fw-bold mb-1">Look at object</label>
+                            <div class="mb-3">
+                                <select class="form-select" id="edit-ris-lookat-obj-select">
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h6 class="mt-4 fw-bold border-bottom pb-1">Profile configuration</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Setting</label>
+                            <select class="form-select" id="edit-ris-mode">
+                                <option value="NONE">None</option>
+                                <option value="PHASE_GRADIENT">Phase Gradient Reflector</option>
+                                <option value="FOCUSING_LENS">Focusing Lens</option>
+                            </select>
+                        </div>
+                        <div id="edit-ris-profile-config" class="mb-3 d-none">
+                            <div class="mb-3">
+                                <label for="edit-ris-num-modes" class="form-label fw-bold">Number of reradiation
+                                    modes</label>
+                                <input type="number" class="form-control" id="edit-ris-num-modes" value="1" min="1"
+                                    max="8">
+                            </div>
+                            <div id="edit-ris-modes-container" class="border rounded p-2 bg-light">
+                                <!-- Filas dinámicas por cada modo -->
+                            </div>
+                        </div>
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">Edit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-add-radio" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="form-add-radio" class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Add Radio Device</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Type</label>
+                        <select class="form-select" id="radio-type" required>
+                            <option value="transmitter">Transmitter (TX)</option>
+                            <option value="receiver">Receiver (RX)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Name</label>
+                        <input type="text" class="form-control" id="radio-name" required placeholder="TX-1">
+                    </div>
+                    <label class="form-label fw-bold">Position (in m)</label>
+                    <div class="row g-2 mb-3">
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="radio-pos-x"
+                                placeholder="X" required value="0"></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="radio-pos-y"
+                                placeholder="Y" required value="0"></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="radio-pos-z"
+                                placeholder="Z" required value="0"></div>
+                    </div>
+                    <h6 class="mt-4 fw-bold border-bottom pb-1">Orientation mode</h6>
+                    <div class="form-group mb-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="radioLookAtMode"
+                                id="radioModeOrientation" value="orientation" checked>
+                            <label class="form-check-label" for="radioModeOrientation">Manual (º)</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="radioLookAtMode" id="radioModePosition"
+                                value="position">
+                            <label class="form-check-label" for="radioModePosition">Look at position</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="radioLookAtMode" id="radioModeObject"
+                                value="object">
+                            <label class="form-check-label" for="radioModeObject">Look at object</label>
+                        </div>
+                    </div>
+
+                    <div id="radio-orientation-inputs">
+                        <label class="form-label fw-bold mb-1">Orientation (in º)</label>
+                        <div class="row g-2 mb-3">
+                            <div class="col"><input type="number" step="1" class="form-control" id="radio-ori-x"
+                                    placeholder="X" value="0"></div>
+                            <div class="col"><input type="number" step="1" class="form-control" id="radio-ori-y"
+                                    placeholder="Y" value="0"></div>
+                            <div class="col"><input type="number" step="1" class="form-control" id="radio-ori-z"
+                                    placeholder="Z" value="0"></div>
+                        </div>
+                    </div>
+
+                    <div id="radio-lookat-pos-inputs" class="d-none">
+                        <label class="form-label fw-bold mb-1">Look at position (in m)</label>
+                        <div class="row mb-3">
+                            <div class="col"><input type="number" step="0.1" class="form-control"
+                                    id="radio-lookat-pos-x" value="0.0" placeholder="X"></div>
+                            <div class="col"><input type="number" step="0.1" class="form-control"
+                                    id="radio-lookat-pos-y" value="0.0" placeholder="Y"></div>
+                            <div class="col"><input type="number" step="0.1" class="form-control"
+                                    id="radio-lookat-pos-z" value="0.0" placeholder="Z"></div>
+                        </div>
+                    </div>
+
+                    <div id="radio-lookat-obj-inputs" class="d-none">
+                        <label class="form-label fw-bold mb-1">Look at object</label>
+                        <div class="mb-3">
+                            <select class="form-select" id="radio-lookat-obj-select">
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal fade" id="modal-edit-radio" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="form-edit-radio" class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Edit Radio Device</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit-radio-oldname">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Type</label>
+                        <select class="form-select" id="edit-radio-type" required>
+                            <option value="transmitter">Transmitter (TX)</option>
+                            <option value="receiver">Receiver (RX)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Name</label>
+                        <input type="text" class="form-control" id="edit-radio-name" required>
+                    </div>
+                    <label class="form-label fw-bold">Position (in m)</label>
+                    <div class="row g-2 mb-3">
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="edit-radio-pos-x"
+                                required placeholder="X"></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="edit-radio-pos-y"
+                                required placeholder="Y"></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="edit-radio-pos-z"
+                                required placeholder="Z"></div>
+                    </div>
+
+                    <h6 class="mt-4 fw-bold border-bottom pb-1">Orientation mode</h6>
+                    <div class="form-group mb-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="editRadioLookAtMode"
+                                id="editRadioModeOrientation" value="orientation" checked>
+                            <label class="form-check-label" for="editRadioModeOrientation">Manual (º)</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="editRadioLookAtMode"
+                                id="editRadioModePosition" value="position">
+                            <label class="form-check-label" for="editRadioModePosition">Look at position</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="editRadioLookAtMode"
+                                id="editRadioModeObject" value="object">
+                            <label class="form-check-label" for="editRadioModeObject">Look at object</label>
+                        </div>
+                    </div>
+
+                    <div id="edit-radio-orientation-inputs">
+                        <label class="form-label fw-bold mb-1">Orientation (in º)</label>
+                        <div class="row g-2 mb-3">
+                            <div class="col"><input type="number" step="1" class="form-control" id="edit-radio-ori-x"
+                                    placeholder="X"></div>
+                            <div class="col"><input type="number" step="1" class="form-control" id="edit-radio-ori-y"
+                                    placeholder="Y"></div>
+                            <div class="col"><input type="number" step="1" class="form-control" id="edit-radio-ori-z"
+                                    placeholder="Z"></div>
+                        </div>
+                    </div>
+
+                    <div id="edit-radio-lookat-pos-inputs" class="d-none">
+                        <label class="form-label fw-bold mb-1">Look at position (in m)</label>
+                        <div class="row mb-3">
+                            <div class="col"><input type="number" step="0.1" class="form-control"
+                                    id="edit-radio-lookat-pos-x" placeholder="X"></div>
+                            <div class="col"><input type="number" step="0.1" class="form-control"
+                                    id="edit-radio-lookat-pos-y" placeholder="Y"></div>
+                            <div class="col"><input type="number" step="0.1" class="form-control"
+                                    id="edit-radio-lookat-pos-z" placeholder="Z"></div>
+                        </div>
+                    </div>
+
+                    <div id="edit-radio-lookat-obj-inputs" class="d-none">
+                        <label class="form-label fw-bold mb-1">Look at object</label>
+                        <div class="mb-3">
+                            <select class="form-select" id="edit-radio-lookat-obj-select">
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Edit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal fade" id="modal-config-arrays" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="form-config-arrays" class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Configure planar arrays</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Type</label>
+                        <select class="form-select" id="arrays-type" required>
+                            <option value="transmitter">Transmitter (TX)</option>
+                            <option value="receiver">Receiver (RX)</option>
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="array-numRows" class="form-label fw-bold">Number of rows</label>
+                            <input type="number" class="form-control" id="arrays-numRows" value="1" min="1" step="1" required>
+                        </div>
+                        <div class="col">
+                            <label for="array-numCols" class="form-label fw-bold">Number of columns</label>
+                            <input type="number" class="form-control" id="arrays-numCols" value="1" min="1" step="1" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="array-vSpacing" class="form-label fw-bold">Vertical spacing</label>
+                            <input type="number" class="form-control" id="arrays-vSpacing" step="0.1" required>
+                        </div>
+                        <div class="col">
+                            <label for="array-hSpacing" class="form-label fw-bold">Horizontal spacing</label>
+                            <input type="number" class="form-control" id="arrays-hSpacing" step="0.1" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label fw-bold">Pattern</label>
+                            <select class="form-select" id="arrays-pattern">
+                                <option value="iso">Isotropic</option>
+                                <option value="dipole">Dipole</option>
+                                <option value="hw_dipole">Half-wavelength dipole</option>
+                                <option value="tr38901">TR38901</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label class="form-label fw-bold">Polarization</label>
+                            <select class="form-select" id="arrays-polarization">
+                                <option value="V">Vertical</option>
+                                <option value="H">Horizontal</option>
+                                <option value="VH">Vertical horizontal</option>
+                                <option value="cross">Cross</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Configure</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-ray-tracing" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="form-ray-tracing" class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Ray Tracing Configuration</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Max Depth</label>
+                        <input type="number" class="form-control" id="rt-max-depth" value="3" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Method</label>
+                        <select class="form-select" id="rt-method" required>
+                            <option value="fibonacci">Fibonacci</option>
+                            <option value="exhaustive">Exhaustive</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Num samples</label>
+                        <input type="number" class="form-control" id="rt-num-samples" value="1000000" required>
+                    </div>
+
+                    <label class="form-label fw-bold">Other settings</label>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rt-los" checked>
+                            <label class="form-check-label" for="rt-los">LoS</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rt-reflection" checked>
+                            <label class="form-check-label" for="rt-reflection">Reflection</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rt-diffraction">
+                            <label class="form-check-label" for="rt-diffraction">Diffraction</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rt-scattering">
+                            <label class="form-check-label" for="rt-scattering">Scattering</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rt-ris" checked>
+                            <label class="form-check-label" for="rt-ris">RIS</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rt-edge-diffraction">
+                            <label class="form-check-label" for="rt-edge-diffraction">Edge Diffraction</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Compute paths</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-coverage-map" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="form-coverage-map" class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Coverage Map Configuration</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Max Depth</label>
+                        <input type="number" class="form-control" id="cm-max-depth" value="3" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Num Samples</label>
+                        <input type="number" class="form-control" id="cm-num-samples" value="2000000" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Num Runs</label>
+                        <input type="number" class="form-control" id="cm-num-runs" value="1" required>
+                    </div>
+
+                    <label class="form-label fw-bold">CM Center (in m)</label>
+                    <div class="row g-2 mb-3">
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-cx"
+                                placeholder="X"></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-cy"
+                                placeholder="Y"></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-cz"
+                                placeholder="Z"></div>
+                    </div>
+
+                    <label class="form-label fw-bold">CM Size (in m)</label>
+                    <div class="row g-2 mb-3">
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-sw"
+                                placeholder="Width"></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-sh"
+                                placeholder="Height"></div>
+                    </div>
+
+                    <label class="form-label fw-bold">CM Orientation (in º)</label>
+                    <div class="row g-2 mb-3">
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-ox"
+                                placeholder="X"></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-oy"
+                                placeholder="Y"></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-oz"
+                                placeholder="Z"></div>
+                    </div>
+
+                    <label class="form-label fw-bold">Cell Size (in m)</label>
+                    <div class="row g-2 mb-3">
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-cw" value="1.0"
+                                required></div>
+                        <div class="col"><input type="number" step="0.1" class="form-control" id="cm-ch" value="1.0"
+                                required></div>
+                    </div>
+
+                    <label class="form-label fw-bold">Other settings</label>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cm-los" checked>
+                            <label class="form-check-label" for="cm-los">LoS</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cm-reflection" checked>
+                            <label class="form-check-label" for="cm-reflection">Reflection</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cm-diffraction">
+                            <label class="form-check-label" for="cm-diffraction">Diffraction</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cm-scattering">
+                            <label class="form-check-label" for="cm-scattering">Scattering</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cm-ris" checked>
+                            <label class="form-check-label" for="cm-ris">RIS</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cm-edge-diffraction">
+                            <label class="form-check-label" for="cm-edge-diffraction">Edge Diffraction</label>
+                        </div>
+                    </div>
+                    <label class="form-label fw-bold">Visualization settings</label>
+                    <div class="row g-2 mb-3">
+                        <div class="col">
+                            <input type="number" step="0.1" class="form-control" id="cm-vmin" value="-150" required
+                                placeholder="vmin">
+                            <small class="text-muted">vmin (dB)</small>
+                        </div>
+                        <div class="col">
+                            <input type="number" step="0.1" class="form-control" id="cm-vmax" value="-65" required
+                                placeholder="vmax">
+                            <small class="text-muted">vmax (dB)</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cm-show-ris" checked>
+                            <label class="form-check-label" for="cm-show-ris">Show RIS</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cm-show-rx" checked>
+                            <label class="form-check-label" for="cm-show-rx">Show RX</label>
+                        </div>
+                        <div class="form-check mt-2 border-top pt-2">
+                            <input class="form-check-input" type="checkbox" id="cm-show-coverage-gain">
+                            <label class="form-check-label fw-bold text-primary" for="cm-show-coverage-gain">Show
+                                coverage gain? (Generates 3 maps)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Compute coverage map</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <div class="modal fade" id="modal-show-coverage-map" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Coverage Map</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center" id="coverage-maps-container">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="modal fade" id="modal-load-scene" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form id="form-load-scene" class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Load scene</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select scene</label>
+                        <select class="form-select" id="scene-selection" required>
+                            <option value="empty">Empty scene</option>
+                            <option value="floor_wall">Floor wall</option>
+                            <option value="simple_street_canyon">Simple street canyon</option>
+                            <option value="simple_street_canyon_with_cars">Simple street canyon with cars</option>
+                            <option value="etoile">Etoile (Paris)</option>
+                            <option value="munich">Munich</option>
+                            <option value="simple_wedge">Simple wedge</option>
+                            <option value="simple_reflector">Simple reflector</option>
+                            <option value="double_reflector">Double reflector</option>
+                            <option value="triple_reflector">Triple reflector</option>
+                            <option value="box">Box</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="scene-frequency" class="form-label fw-bold">Frequency (GHz)</label>
+                        <input type="number" class="form-control" id="scene-frequency" value="3" step="0.01" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Load scene</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="./dist/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
